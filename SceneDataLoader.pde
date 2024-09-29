@@ -5,6 +5,8 @@ import nub.primitives.Vector;
 import java.text.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.nio.file.Files;
 
 public enum Direction {
   IN,
@@ -304,7 +306,7 @@ class SceneDataLoader {
   ArrayList<DataPacket> sceneData = new ArrayList();
   Scene scene;
   ArrayList<String> hudMessageQueue = new ArrayList();
-
+  final static String cacheDir = ".cache";
   ArrayList<Sensor> failedNodes = new ArrayList();
   /**
    * Both constructors should call the API request and populate the sceneData field.
@@ -327,10 +329,8 @@ class SceneDataLoader {
         for (var dir : sensor.getDirectionsForSensor()) {
           var fromDate = date.atTime(0, 0);
           var toDate = date.atTime(23, 59);
-          var route = generateRoute(fromDate, toDate, sensor, dir);
           try {
-            var jsonData = loadJSONArray(route);
-            
+            var jsonData = loadJSONAndCache(fromDate, toDate, sensor, dir);
             processData(jsonData, floor, sensor, dir);
           }
           catch (java.lang.RuntimeException e) {
@@ -343,6 +343,7 @@ class SceneDataLoader {
     // }
   }
 
+
   /**
    * Constructor for FLOOR SERIES data.
    * Should accept the start and end time.
@@ -353,10 +354,8 @@ class SceneDataLoader {
     for (var floor : Floor.values()) {
       for (var sensor : floor.getSensors()) {
         for (var dir : sensor.getDirectionsForSensor()) {
-          var route = generateRoute(start, end, sensor, dir);
-          println("calling route = ", route);
           try {
-            var jsonData = loadJSONArray(route);
+            var jsonData = loadJSONAndCache(start, end, sensor, dir);
             processData(jsonData, floor, sensor, dir);
           }
           catch (java.lang.RuntimeException e) {
@@ -367,6 +366,28 @@ class SceneDataLoader {
         }
       }
     }
+  }
+
+  JSONArray loadJSONAndCache(LocalDateTime fromTime, LocalDateTime toTime, Sensor sensor, Direction dir) {
+    // check cache first
+    
+    var cacheRoute = Paths.get(
+      sketchPath(), 
+      SceneDataLoader.cacheDir, 
+      formatter.format(fromTime) + "-" + formatter.format(toTime) + "-" + sensor.toAPIFormat(dir) + ".json");
+
+    var cacheFile = cacheRoute.toFile();
+    if (cacheFile.exists()) {
+      return loadJSONArray(cacheFile.getAbsolutePath());
+    }
+
+    var route = generateRoute(fromTime, toTime, sensor, dir);
+
+    var obj = loadJSONArray(route);
+    // cache it
+    saveJSONArray(obj, cacheFile.getAbsolutePath());  
+
+    return obj;
   }
   
   void addToHud(String msg) {
