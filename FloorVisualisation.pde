@@ -5,6 +5,7 @@ import nub.processing.*;
 import processing.sound.*;
 
 SoundFile buttonSound;
+SoundFile busySound;
 
 Scene scene;
 //group bounding box
@@ -45,6 +46,8 @@ class SceneManager {
         i);
       floorScene.setFocus(i == focusedFloor);
       scenes.add(floorScene);
+      println("floor " + i);
+      println("size: " + floorScene.group.size());
     }
     generateSlider(1);
   }
@@ -198,6 +201,12 @@ void setup() {
   //scenes.generateFloorSeries();
   //generateSlider(1);
   //println(groupDepth * i);
+  
+  busySound = new SoundFile(this, "busySound.mp3");
+  
+  busySound.play();
+  busySound.loop();
+  busySound.amp(0);
 }
 
 void generateSlider(float resize) {
@@ -221,7 +230,15 @@ void draw() {
     for (var i = 0; i < scenes.sceneCount(); i++) {
       var timeScene = scenes.get(i);
       timeScene.setFocus(i == slider.floor);
-
+      
+      if (i == slider.floor) { 
+        int peopleCount = timeScene.getPeopleCount();
+        float volume = ((float) peopleCount) / 40.0;
+        volume = volume > 1.0 ? 1.0 : volume;
+        busySound.amp(volume);
+        //println("now on level " + slider.floor + " , peopleCount: " + timeScene.getPeopleCount()); 
+      }
+      
       timeScene.display();
     }
   }

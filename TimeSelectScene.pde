@@ -361,6 +361,8 @@ class TimeSelectScene {
     
     if (isAnyHovered && !isHoverEventHandled) {
       isHoverEventHandled = true;
+      println("Play!!");
+      buttonSound.cue(0);
       buttonSound.play();
     } else if (!isAnyHovered) {
       isHoverEventHandled = false;

@@ -286,6 +286,14 @@ class TimeMapScene {
     }
   }
 
+  public int getPeopleCount() {
+    if (group != null) {
+      return group.size();
+    } else {
+      return 0;
+    }
+  }
+  
   void display() {
     //scene.openContext();
     pushMatrix();
@@ -488,7 +496,6 @@ class TimeMapScene {
     person.setTint(getAlpha() / (255.0 / 4));
 
     group.add(person);
-
   }
   
   public void clearPeople() {
