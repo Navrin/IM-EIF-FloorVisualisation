@@ -8,6 +8,9 @@ class TimeSelectScene {
   ArrayList<Node> dayNodes = new ArrayList();
   ArrayList<Node> hourNodes = new ArrayList();
   ArrayList<Node> floorNodes = new ArrayList();
+  
+  SoundFile buttonSound;
+  boolean isHoverEventHandled;
 
   int startYear = 2021;
   int yearLimit = 4;
@@ -277,6 +280,7 @@ class TimeSelectScene {
 
   void update() {
     if (!root.isAttached()) return;
+    boolean isAnyHovered = false;
     if (taggedYear == -1) {
       for (var i = 0; i < yearLimit; i++) {
         var year = yearNodes.get(i);
@@ -285,6 +289,10 @@ class TimeSelectScene {
           taggedYear = startYear + i;
           loadMonthSelect();
           return;
+        }
+        
+        if (year.isTagged(scene)) {
+          isAnyHovered = true;
         }
       }
     }
@@ -299,6 +307,10 @@ class TimeSelectScene {
           loadDaySelect();
           return;
         }
+        
+        if (month.isTagged(scene)) {
+          isAnyHovered = true;
+        }
       }
     }
     if (taggedDay == -1) {
@@ -311,6 +323,10 @@ class TimeSelectScene {
           loadHourSelect();
           return;
         }
+        
+        if (day.isTagged(scene)) {
+          isAnyHovered = true;
+        }
       }
     }
 
@@ -322,6 +338,10 @@ class TimeSelectScene {
           );
         return;
       }
+      
+      if (hour.isTagged(scene)) {
+          isAnyHovered = true;
+        }
     }
     //var floorValues = Arrays.asList(Floor.values());
 
@@ -334,6 +354,20 @@ class TimeSelectScene {
           );
         return;
       }
+      if (floor.isTagged(scene)) {
+          isAnyHovered = true;
+        }
     }
+    
+    if (isAnyHovered && !isHoverEventHandled) {
+      isHoverEventHandled = true;
+      buttonSound.play();
+    } else if (!isAnyHovered) {
+      isHoverEventHandled = false;
+    }
+  }
+  
+  public void SetButtonSound (SoundFile buttonSound) {
+    this.buttonSound = buttonSound;
   }
 }
