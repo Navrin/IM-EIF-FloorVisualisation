@@ -217,6 +217,7 @@ public enum Sensor {
     case PC09_ST21:
       return new Vector(760, 450);
     case PC09_CR11:
+    case PC09_CR21:
       return new Vector(640, 390);
     case PC09_ST22:
       return new Vector(250, 320);
@@ -325,21 +326,21 @@ class SceneDataLoader {
     var sensors = floor.getSensors();
 
     // for (var i = 0; i < 22; i++) {
-      for (var sensor : sensors) {
-        for (var dir : sensor.getDirectionsForSensor()) {
-          var fromDate = date.atTime(0, 0);
-          var toDate = date.atTime(23, 59);
-          try {
-            var jsonData = loadJSONAndCache(fromDate, toDate, sensor, dir);
-            processData(jsonData, floor, sensor, dir);
-          }
-          catch (java.lang.RuntimeException e) {
-            failedNodes.add(sensor);
-            // eif api is silly and poorly made and doesn't return error codes :/
-            addToHud(String.format("[WARN] eif silently errored for %s [%s]", sensor, sensor.toAPIFormat(dir)));
-          }
+    for (var sensor : sensors) {
+      for (var dir : sensor.getDirectionsForSensor()) {
+        var fromDate = date.atTime(0, 0);
+        var toDate = date.atTime(23, 59);
+        try {
+          var jsonData = loadJSONAndCache(fromDate, toDate, sensor, dir);
+          processData(jsonData, floor, sensor, dir);
+        }
+        catch (java.lang.RuntimeException e) {
+          failedNodes.add(sensor);
+          // eif api is silly and poorly made and doesn't return error codes :/
+          addToHud(String.format("[WARN] eif silently errored for %s [%s]", sensor, sensor.toAPIFormat(dir)));
         }
       }
+    }
     // }
   }
 
@@ -348,32 +349,33 @@ class SceneDataLoader {
    * Constructor for FLOOR SERIES data.
    * Should accept the start and end time.
    */
-  SceneDataLoader(LocalDateTime start, LocalDateTime end, Scene scene) {
+  SceneDataLoader(LocalDateTime start, LocalDateTime end, Floor floor, Scene scene) {
     this.scene = scene;
 
-    for (var floor : Floor.values()) {
-      for (var sensor : floor.getSensors()) {
-        for (var dir : sensor.getDirectionsForSensor()) {
-          try {
-            var jsonData = loadJSONAndCache(start, end, sensor, dir);
-            processData(jsonData, floor, sensor, dir);
-          }
-          catch (java.lang.RuntimeException e) {
-            failedNodes.add(sensor);
-            // eif api is silly and poorly made and doesn't return error codes :/
-            addToHud(String.format("[WARN] eif silently errored for %s [%s]", sensor, sensor.toAPIFormat(dir)));
-          }
+    // for (var floor : Floor.values()) {
+
+    for (var sensor : floor.getSensors()) {
+      for (var dir : sensor.getDirectionsForSensor()) {
+        try {
+          var jsonData = loadJSONAndCache(start, end, sensor, dir);
+          processData(jsonData, floor, sensor, dir);
+        }
+        catch (java.lang.RuntimeException e) {
+          failedNodes.add(sensor);
+          // eif api is silly and poorly made and doesn't return error codes :/
+          addToHud(String.format("[WARN] eif silently errored for %s [%s]", sensor, sensor.toAPIFormat(dir)));
         }
       }
+      // }
     }
   }
 
   JSONArray loadJSONAndCache(LocalDateTime fromTime, LocalDateTime toTime, Sensor sensor, Direction dir) {
     // check cache first
-    
+
     var cacheRoute = Paths.get(
-      sketchPath(), 
-      SceneDataLoader.cacheDir, 
+      sketchPath(),
+      SceneDataLoader.cacheDir,
       formatter.format(fromTime) + "-" + formatter.format(toTime) + "-" + sensor.toAPIFormat(dir) + ".json");
 
     var cacheFile = cacheRoute.toFile();
@@ -385,14 +387,14 @@ class SceneDataLoader {
 
     var obj = loadJSONArray(route);
     // cache it
-    saveJSONArray(obj, cacheFile.getAbsolutePath());  
+    saveJSONArray(obj, cacheFile.getAbsolutePath());
 
     return obj;
   }
-  
+
   void addToHud(String msg) {
     println(msg);
-    if (hudMessageQueue.size() > 8) 
+    if (hudMessageQueue.size() > 8)
       hudMessageQueue.remove(0);
     hudMessageQueue.add(msg);
     scene.beginHUD();

@@ -5,6 +5,7 @@ import nub.processing.*;
 import processing.sound.*;
 
 SoundFile buttonSound;
+SoundFile crowdSound;
 
 Scene scene;
 //group bounding box
@@ -32,7 +33,7 @@ class SceneManager {
     int i = 0;
     for (i = 0; i < floorInfos.size(); i++) {
       var floorInfo = floorInfos.get(i);
-      var data = new TimeMapSceneData(time, SceneType.FLOOR_SERIES, this);
+      var data = new TimeMapSceneData(time, SceneType.FLOOR_SERIES, floorInfo.getDataEnum(), this);
 
       var floorScene = new TimeMapScene(
         this,
@@ -103,6 +104,19 @@ class SceneManager {
 
     if (timeSelect != null) {
       timeSelect.update();
+    }
+
+    if (scenes.size() > 0) {
+      var active = scenes.get(focusedFloor);
+
+      var avgPos = active.getAveragedPeopleScreenPositions();
+      var avgWorldPos = active.getAveragedPositions();
+
+      var dist = Vector.distance(scene.eye().worldPosition(), avgWorldPos);
+      var distScaled = constrain(10.0/abs(dist), 0.6, 1.0);
+
+      crowdSound.pan(constrain((avgPos.x() - 500) / 1000.0, -1.0, 1.0));
+      crowdSound.amp(constrain((active.group.size() / 25.0) * distScaled, 0.0, 1.0) );
     }
   }
 
@@ -194,6 +208,10 @@ void setup() {
   scene.disableDepthTest();
 
   buttonSound = new SoundFile(this, "buttonSound.mp3");
+  crowdSound = new SoundFile(this, "crowd_sound_mono.mp3");
+  crowdSound.loop(1.0, 0.0);
+     crowdSound.amp(0.0);
+
   scenes.showTimeSelect();
   //scenes.generateFloorSeries();
   //generateSlider(1);

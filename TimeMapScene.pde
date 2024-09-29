@@ -35,13 +35,13 @@ class TimeMapSceneData {
 
   public float timeCompleteRatio = 0;
 
-  TimeMapSceneData(LocalDateTime t, SceneType type, SceneManager manager) {
+  TimeMapSceneData(LocalDateTime t, SceneType type, Floor floor, SceneManager manager) {
     startTime = t;
     this.type = type;
-    this.loader = new SceneDataLoader(startTime, startTime.plusHours(1), manager.scene);
+    this.loader = new SceneDataLoader(startTime, startTime.plusHours(1), floor, manager.scene);
   }
 
-  TimeMapSceneData(LocalDate t, SceneType type, int hour, Floor floor,SceneManager manager) {
+  TimeMapSceneData(LocalDate t, SceneType type, int hour, Floor floor, SceneManager manager) {
     startTime = t.atTime(hour-1,0);
     this.type = type;
     this.hour= hour;
@@ -130,8 +130,6 @@ class TimeMapScene {
     //println("running spawn, currently at group n = "+group.size());
     //println(this.floor.sensorPairs);
     for (var paired : this.floor.sensorPairs) {
-      // !!!! NEED: USE DATA !!!!
-      // _____
 
       spawnPeopleForPairedRoute(paired, false);
       spawnPeopleForPairedRoute(paired, true);
@@ -147,12 +145,11 @@ class TimeMapScene {
     }
   }
 
-  // !!!! NEED: USE DATA !!!!
   void spawnPeopleForPairedRoute(SensorPair paired, boolean flip) { //<>// //<>//
     // this should always be IN/OUT for paired sensors
     var pointA = flip ? paired.pointB : paired.pointA;
     var pointB = flip ? paired.pointA : paired.pointB;
-
+ //<>// //<>//
     var directions = pointA.getDirectionsForSensor();
         //println("adding new person", directions);
 
@@ -186,8 +183,6 @@ class TimeMapScene {
   }
 
   void spawnRadialPeople(SensorSingular sensor) {
-    // !!!!! NEED DATA !!!!!!
-
     // this should always be UP/DOWN for stair sensors
     var directions = sensor.point.getDirectionsForSensor();
 
@@ -266,6 +261,19 @@ class TimeMapScene {
     routes.add(route);
   }
 
+  void markFailedSensors() {
+    for (var sensor : this.sceneData.loader.failedNodes) {
+      pushStyle();
+      strokeWeight(2);
+      stroke(255, 0, 0, getAlpha() / 2);
+      var pos = sensor.toMapPosition();
+      line(pos.x() - 10, pos.y() + 10, pos.x() + 10, pos.y() + 10);
+      line(pos.x() - 10, pos.y() - 10 , pos.x() + 10, pos.y() -10);
+
+      popStyle();
+
+    }
+  }
   void markRoutes()
   {
     for (var route : routes) {
@@ -316,6 +324,7 @@ class TimeMapScene {
       //}
     }
     markRoutes();
+    markFailedSensors();
     popMatrix();
   }
 
@@ -498,4 +507,51 @@ class TimeMapScene {
     }
     group.clear();
   }
+  
+  public Vector getAveragedPeopleScreenPositions() {
+    var x = 0.0;
+    var y = 0.0;
+    // var z = 0.0;
+
+    for (var person : group) {
+      var pos = sceneManager.scene.screenLocation(person.node.worldPosition());
+      x += pos.x();
+      y += pos.y();
+      // z += pos.z();
+    }
+
+    if (group.size() > 0) {
+      x /= group.size();
+      y /= group.size();
+      // z /= group.size();
+
+      return new Vector(x, y);
+    } else {
+      return new Vector(0,0);
+    }
+  }
+
+    public Vector getAveragedPositions() {
+    var x = 0.0;
+    var y = 0.0;
+    var z = 0.0;
+
+    for (var person : group) {
+      var pos = person.node.worldPosition();
+      x += pos.x();
+      y += pos.y();
+      z += pos.z();
+    }
+
+    if (group.size() > 0) {
+      x /= group.size();
+      y /= group.size();
+      z /= group.size();
+
+      return new Vector(x, y, z);
+    } else {
+      return new Vector(0,0,0);
+    }
+  }
+
 }
