@@ -2,6 +2,10 @@ import nub.primitives.*;
 import nub.core.*;
 import nub.processing.*;
 
+import processing.sound.*;
+
+SoundFile buttonSound;
+
 Scene scene;
 //group bounding box
 int groupWidth = 1280;
@@ -71,6 +75,7 @@ class SceneManager {
   }
   void showTimeSelect() {
     timeSelect = new TimeSelectScene(this);
+    timeSelect.SetButtonSound(buttonSound);
   }
 
 
@@ -188,6 +193,7 @@ void setup() {
   // HACK: needed for transparency to work.
   scene.disableDepthTest();
 
+  buttonSound = new SoundFile(this, "buttonSound.mp3");
   scenes.showTimeSelect();
   //scenes.generateFloorSeries();
   //generateSlider(1);
